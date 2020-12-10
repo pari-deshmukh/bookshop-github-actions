@@ -48,7 +48,7 @@ class Books {
 
 	/**
 	 * gets a book by it's id
-	 * @param {String} id the id to check
+	 * @param {Number} id the id to check
 	 * @returns {Object} returns object with the book details if the book exists
 	 */
 	async get(id) {
@@ -125,22 +125,15 @@ class Books {
 	 * @param {String} book.name the book's name
 	 * @param {String} book.author the book's author
 	 * @param {String} book.description the book's description
-	 * @param {Object} book.type an Object with the book's type details
-	 * @param {Number} book.type.price_mu the book's price in monetory units
-	 * @param {Number} book.type.ean the book's ean (barcode)
-	 * @param {String} book.type.type the book type (paperback/hardback)
-	 * @param {String} book.type.condition the book's condition (new/used)
-	 * @param {Number} book.type.qty the number of books available in inventory
-	 * @param {Number} book.type.weight_gm the weight of the book in grams
-	 * @param {Object} book.images an Object with the filenames of the book's images
-	 * @param {String} book.images.thumbnail_name filename of the book's thumbnail image
-	 * @param {String} book.images.fullsize_name filename of the book's full size image
+	 * @param {Array<{price_mu: Number, ean: Number, type: String, condition: Number, qty: Number,
+	 *         weight_gm: Number}>} book.type an Object Array with the book's type details
+	 * @param {Array<{thumbnail_name: String, fullsize_name: String}>} book.images an
+	 *         Object Array with the filenames of the book's images
 	 * @returns {Object} returns bookRecord object with change details if the new book has been added
 	 * @returns {Number} returns bookRecord.lastID if the new book has been added
 	 * @returns {Number} returns bookRecord.changes count if the new book has been added
 	 */
 	async add(book) {
-		if(!Object.keys(book).length) throw new Error('book object is empty')
 		if(!book.name) throw new Error('missing book name')
 
 		let sql = `SELECT COUNT(id) as records FROM books WHERE\
@@ -162,49 +155,118 @@ class Books {
 		return booksRecord
 	}
 
-	// 	/**
-	// 	 * updates an existing new book
-	// 	 * @param {Object} book an Object with the book details
-	// 	 * @param {Number} book.id the book's unique identifier
-	// 	 * @param {String} book.name the book's name
-	// 	 * @param {String} book.author the book's author
-	// 	 * @param {String} book.description the book's description
-	// 	 * @param {Number} book.price_mu the book's price in monetory units
-	// 	 * @param {Number} book.ean the book's ean (barcode)
-	// 	 * @param {String} book.type the book type (paperback/hardback)
-	// 	 * @param {String} book.condition the book's condition (new/used)
-	// 	 * @param {Number} book.qty the number of books available in inventory
-	// 	 * @param {Number} book.weight_gm the weight of the book in grams
-	// 	 * @param {String} book.thumbnail_name filename of the book's thumbnail image
-	// 	 * @param {String} book.fullsize_name filename of the book's full size image
-	// 	 * @returns {Object} returns book object with change details if the new book has been added
-	// 	 * @returns {Number} returns book.lastID if the new book has been added
-	// 	 * @returns {Number} returns book.changes count if the new book has been added
-	// 	 */
-	// 	async update(book) {
-	// 		if(!Object.keys(book).length) throw new Error('book object is empty')
-	// 		if(!book.name) throw new Error('missing book name')
+	/**
+	 * updates an existing book type
+	 * @param {Number} book_id the book's unique identifier
+	 * @param {Object} bookType an Object with the book's type details
+	 * @param {Number} bookType.id the bookType unique identifier
+	 * @param {Number} bookType.price_mu the book's price in monetory units
+	 * @param {Number} bookType.ean the book's ean (barcode)
+	 * @param {String} bookType.type the book type (paperback/hardback)
+	 * @param {String} bookType.condition the book's condition (new/used)
+	 * @param {Number} bookType.qty the number of books available in inventory
+	 * @param {Number} bookType.weight_gm the weight of the book in grams
+	 * @returns {Object} returns bookTypeRecord object with change details if the book was updated
+	 * @returns {Number} returns bookTypeRecord.lastID if the book was updated
+	 * @returns {Number} returns bookTypeRecord.changes count if the book was updated
+	 */
+	async updateBookType(bookId, bookType) {
+		if(!bookType.id) throw new Error('missing bookType id')
+		if(!bookId) throw new Error('missing bookId')
+		let sql = `SELECT COUNT(id) as records FROM bookType WHERE id=${bookType.id};`
+		const data = await this.db.get(sql)
+		if(data.records === 0) throw new Error('bookType not found')
 
-	// 		let sql = `SELECT COUNT(id) as records FROM books WHERE\
-	// 		name="${book.name}" AND author="${book.author}";`
-	// 		const data = await this.db.get(sql)
-	// 		if(data.records === 0) throw new Error(`book "${book.name}" by author "${book.author}" doesn't exist`)
+		sql = `UPDATE bookType SET book_id = ${bookId}, price_mu = ${bookType.price_mu}, \
+    ean = "${bookType.ean}", type = "${bookType.type}", condition = "${bookType.condition}", \
+    qty = ${bookType.qty}, weight_gm = ${bookType.weight_gm} WHERE id = ${bookType.id};`
+		const bookTypeRecord = await this.db.run(sql)
 
-	// 		sql = `UPDATE books SET name = "${book.name}", author = "${book.author}", \
-	// 		description = "${book.description}" WHERE id = ${book.id};`
-	// 		const booksRecord = await this.db.run(sql)
+		return bookTypeRecord
+	}
 
-	// 		sql = `UPDATE bookType SET price_mu = ${book.price_mu}, ean = "${book.ean}", \
-	// 		type = "${book.type}", condition = "${book.condition}", qty = ${book.qty}, \
-	// 		weight_gm = ${book.weight_gm} WHERE book_id = ${book.id};`
-	// 		???????????? ADD BOOK TYPE AND ADD BOOK IMAGES IS NEEDED AND SAME FOR UPDATE AND DELETE
-	// 		await this.db.run(sql)
+	/**
+	 * updates an existing set of book images
+	 * @param {Number} book_id the book's unique identifier
+	 * @param {Object} bookImages an Object with the filenames of the book's images
+	 * @param {Number} bookImages.id the bookImages unique identifier
+	 * @param {String} bookImages.thumbnail_name filename of the book's thumbnail image
+	 * @param {String} bookImages.fullsize_name filename of the book's full size image
+	 * @returns {Object} returns book object with change details if the book was updated
+	 * @returns {Number} returns book.lastID if the book was updated
+	 * @returns {Number} returns book.changes count if the book was updated
+	 */
+	async updateBookImages(bookId, bookImages) {
+		if(!Object.keys(bookImages).length) throw new Error('bookImages object is empty')
+		if(!bookImages.id) throw new Error('missing bookImages id')
+		if(!bookId) throw new Error('missing bookId')
 
-	// 		sql = `INSERT INTO bookImages(book_id, thumbnail_name, fullsize_name)\
-	// 		VALUES("${booksRecord.lastID}", "${book.thumbnail_name}", "${book.fullsize_name}");`
-	// 		await this.db.run(sql)
-	// 		return booksRecord
-	// 	}
+		let sql = `SELECT COUNT(id) as records FROM bookImages WHERE id=${bookImages.id};`
+		const data = await this.db.get(sql)
+		if(data.records === 0) throw new Error('bookImages set not found')
+
+		sql = `UPDATE bookImages SET book_id = ${bookId}, thumbnail_name = "${bookImages.thumbnail_name}", \
+    fullsize_name = "${bookImages.fullsize_name}" WHERE id = ${bookImages.id};;`
+		const bookImagesRecord= await this.db.run(sql)
+
+		return bookImagesRecord
+	}
+
+	/**
+	 * updates an existing book
+	 * @param {Object} book an Object with the book details
+	 * @param {Number} book.id the book's unique identifier
+	 * @param {String} book.name the book's name
+	 * @param {String} book.author the book's author
+	 * @param {String} book.description the book's description
+	 * @param {Array<{id: Number, price_mu: Number, ean: Number, type: String, condition: Number,
+	 *         qty: Number, weight_gm: Number}>} book.type an Object Array with the book's type details
+	 * @param {Array<{id: Number, thumbnail_name: String, fullsize_name: String}>} book.images an
+	 *         Object Array with the filenames of the book's images
+	 * @returns {Object} returns bookRecord object with change details if the book was updated
+	 * @returns {Number} returns bookRecord.lastID if the book was updated
+	 * @returns {Number} returns bookRecord.changes count if the book was updated
+	 */
+	async update(book) {
+		if(!book.id) throw new Error('missing book id')
+
+		let sql = `SELECT COUNT(id) as records FROM books WHERE id="${book.id}";`
+		const data = await this.db.get(sql)
+		if(data.records === 0) throw new Error(`book with id "${book.id}" not found`)
+
+		sql = `UPDATE books SET name = "${book.name}", author = "${book.author}", \
+    description = "${book.description}" WHERE id="${book.id}";`
+		const booksRecord = await this.db.run(sql)
+
+		for (const bookType of book.types) {
+			await this.updateBookType(book.id, bookType)
+		}
+
+		for (const bookImages of book.images) {
+			await this.updateBookImages(book.id, bookImages)
+		}
+		return booksRecord
+	}
+
+	/**
+	 * removes an existing book
+	 * @param {Number} id the book's unique identifier
+	 * @returns {Boolean} returns true if the new book was removed
+	 */
+	async remove(id) {
+		let sql = `SELECT COUNT(id) as records FROM books WHERE id="${id}";`
+		const data = await this.db.get(sql)
+		if(data.records === 0) throw new Error(`book with id "${id}" not found`)
+
+		sql = `DELETE FROM bookImages WHERE book_id="${id}";`
+		await this.db.run(sql)
+		sql = `DELETE FROM bookType WHERE book_id="${id}";`
+		await this.db.run(sql)
+		sql = `DELETE FROM books WHERE id="${id}";`
+		await this.db.run(sql)
+
+		return true
+	}
 
 	async close() {
 		await this.db.close()

@@ -5,27 +5,45 @@ const merchantOfVenice = {
 	name: 'The Merchant of Venice',
 	author: 'William Shakespeare',
 	description: 'An early work of Shakespeare.',
-	price_mu: 860,
-	ean: '978-9380816296',
-	type: 'paperback',
-	condition: 'new',
-	qty: 25,
-	weight_gm: 154,
-	image_thumbnail_name: 'merchant_of_venice_thumbnail',
-	image_fullsize_name: 'merchant_of_venice_full'
+	types: [{
+		price_mu: 860,
+		ean: '978-9380816296',
+		type: 'paperback',
+		condition: 'new',
+		qty: 25,
+		weight_gm: 154,
+	}, {
+		price_mu: 860,
+		ean: '978-9380812458',
+		type: 'hardcover',
+		condition: 'new',
+		qty: 15,
+		weight_gm: 310,
+	}],
+	images: [{
+		thumbnail_name: 'merchant_of_venice_thumbnail_1',
+		fullsize_name: 'merchant_of_venice_full_1'
+	}, {
+		thumbnail_name: 'merchant_of_venice_thumbnail_2',
+		fullsize_name: 'merchant_of_venice_full_2'
+	}]
 }
 const juliusCaesar = {
 	name: 'Julius Caesar',
 	author: 'William Shakespeare',
 	description: 'Another early work of Shakespeare.',
-	price_mu: 132,
-	ean: '978-8129101914',
-	type: 'paperback',
-	condition: 'new',
-	qty: 12,
-	weight_gm: 75,
-	image_thumbnail_name: 'julius_caesar_thumbnail',
-	image_fullsize_name: 'julius_caesar_full'
+	types: [{
+		price_mu: 132,
+		ean: '978-8129101914',
+		type: 'paperback',
+		condition: 'new',
+		qty: 12,
+		weight_gm: 75,
+	}],
+	images: [{
+		thumbnail_name: 'julius_caesar_thumbnail',
+		fullsize_name: 'julius_caesar_full'
+	}]
 }
 
 test('DB : connect to database and check tables', async test => {
@@ -117,8 +135,16 @@ test('GET : add book and retrieve by id', async test => {
 	const books = await new Books()
 	const bookRecord = await books.add(merchantOfVenice)
 	const record = await books.get(bookRecord.lastID)
-	delete record.id
-	test.deepEqual(record, merchantOfVenice, 'book not found by id')
+	merchantOfVenice.id = record.id
+	merchantOfVenice.images[0].id =1
+	merchantOfVenice.images[0].book_id =1
+	merchantOfVenice.types[0].id =1
+	merchantOfVenice.types[0].book_id = 1
+	merchantOfVenice.images[1].id = 2
+	merchantOfVenice.images[1].book_id =1
+	merchantOfVenice.types[1].id = 2
+	merchantOfVenice.types[1].book_id = 1
+	test.deepEqual(record, merchantOfVenice, `book with id ${bookRecord.lastID} not found`)
 	books.close()
 })
 

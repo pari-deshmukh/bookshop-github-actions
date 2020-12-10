@@ -73,7 +73,7 @@ test('ADD : error if blank book', async test => {
 		await books.add({})
 		test.fail('error not thrown')
 	} catch(err) {
-		test.is(err.message, 'book object is empty', 'incorrect error message')
+		test.is(err.message, 'missing book name', 'incorrect error message')
 	} finally {
 		books.close()
 	}
@@ -133,8 +133,8 @@ test('GET : get all books', async test => {
 test('GET : add book and retrieve by id', async test => {
 	test.plan(1)
 	const books = await new Books()
-	const bookRecord = await books.add(merchantOfVenice)
-	const record = await books.get(bookRecord.lastID)
+	await books.add(merchantOfVenice)
+	const record = await books.get(1)
 	merchantOfVenice.id = record.id
 	merchantOfVenice.images[0].id =1
 	merchantOfVenice.images[0].book_id =1
@@ -144,7 +144,7 @@ test('GET : add book and retrieve by id', async test => {
 	merchantOfVenice.images[1].book_id =1
 	merchantOfVenice.types[1].id = 2
 	merchantOfVenice.types[1].book_id = 1
-	test.deepEqual(record, merchantOfVenice, `book with id ${bookRecord.lastID} not found`)
+	test.deepEqual(record, merchantOfVenice, 'book entry mismatch')
 	books.close()
 })
 
@@ -161,5 +161,62 @@ test('GET : invalid book id', async test => {
 	}
 })
 
-test.todo('UPDATE: update book by id')
-test.todo('REMOVE: delete book by id')
+test('UPDATE: update book by id', async test => {
+	test.plan(1)
+	const books = await new Books()
+	await books.add(merchantOfVenice)
+	const record = await books.get(1)
+	record.description = 'An early work of William Shakespeare.'
+	await books.update(record)
+	const updatedRecord = await books.get(1)
+	test.deepEqual(updatedRecord, record, 'book not updated as expected')
+	books.close()
+})
+
+test('UPDATE : error if blank book', async test => {
+	test.plan(1)
+	const books = await new Books()
+	try {
+		await books.update({})
+		test.fail('error not thrown')
+	} catch(err) {
+		test.is(err.message, 'missing book id', 'incorrect error message')
+	} finally{
+		books.close()
+	}
+})
+
+test('UPDATE : error if incorrect book id', async test => {
+	test.plan(1)
+	const books = await new Books()
+	try {
+		await books.update({id: 123456})
+		test.fail('error not thrown')
+	} catch(err) {
+		test.is(err.message, 'book with id "123456" not found', 'incorrect error message')
+	} finally{
+		books.close()
+	}
+})
+
+test('REMOVE: remove book by id', async test => {
+	test.plan(1)
+	const books = await new Books()
+	await books.add(merchantOfVenice)
+	const response = await books.remove(1)
+	test.is(response, true, 'book was successfully removed')
+	books.close()
+})
+
+test('REMOVE: error if incorrect book id', async test => {
+	test.plan(1)
+	const books = await new Books()
+	try {
+		await books.remove(123456)
+		test.fail('error not thrown')
+	} catch(err) {
+		test.is(err.message, 'book with id "123456" not found', 'incorrect error message')
+	} finally{
+		books.close()
+	}
+})

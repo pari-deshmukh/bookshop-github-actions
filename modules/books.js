@@ -9,11 +9,12 @@ class Books {
 	constructor(dbName = ':memory:') {
 		return (async() => {
 			this.db = await sqlite.open(dbName)
-			// we need this table to store the user accounts
+			// we need this table to store the books
 			let sql = 'CREATE TABLE IF NOT EXISTS books\
 				(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,\
 				author TEXT, description TEXT, image TEXT);'
 			await this.db.run(sql)
+			// we need this table to store the book types
 			sql = 'CREATE TABLE IF NOT EXISTS bookType\
 				(id INTEGER PRIMARY KEY AUTOINCREMENT, book_id INTEGER NOT NULL,\
 				price_mu INTEGER, ean TEXT, type TEXT, condition TEXT,\
@@ -30,7 +31,7 @@ class Books {
 	 */
 	async getAll() {
 		const sql = 'SELECT b.id, b.name, b.author, b.description, b.image, bt.id as book_type_id, bt.price_mu, \
-    bt.ean, bt.type, bt.condition, bt.qty, bt.weight_gm FROM books b, bookType bt WHERE bt.book_id=b.id;'
+		bt.ean, bt.type, bt.condition, bt.qty, bt.weight_gm FROM books b, bookType bt WHERE bt.book_id=b.id;'
 		return await this.db.all(sql)
 	}
 
@@ -45,8 +46,24 @@ class Books {
 		if(!records.count) throw new Error(`book id "${id}" not found`)
 
 		sql = `SELECT b.id, b.name, b.author, b.description, b.image, bt.id as book_type_id, bt.price_mu,\
-    bt.ean, bt.type, bt.condition, bt.qty, bt.weight_gm FROM books b, bookType bt \
-    WHERE bt.book_id=b.id AND b.id = ${id};`
+		bt.ean, bt.type, bt.condition, bt.qty, bt.weight_gm FROM books b, bookType bt \
+		WHERE bt.book_id=b.id AND b.id = ${id};`
+		return await this.db.get(sql)
+	}
+
+	/**
+	 * gets a book by it's type id
+	 * @param {Number} id the id to check
+	 * @returns {Object} returns object with the book details if the book exists
+	 */
+	async getByType(id) {
+		let sql = `SELECT count(id) AS count FROM bookType WHERE id = "${id}";`
+		const records = await this.db.get(sql)
+		if(!records.count) throw new Error(`bookType id "${id}" not found`)
+
+		sql = `SELECT b.id, b.name, b.author, b.description, b.image, bt.id as book_type_id, bt.price_mu,\
+		bt.ean, bt.type, bt.condition, bt.qty, bt.weight_gm FROM books b, bookType bt \
+		WHERE bt.book_id=b.id AND bt.id = ${id};`
 		return await this.db.get(sql)
 	}
 
@@ -84,7 +101,7 @@ class Books {
 	 * @param {String} book.description the book's description
 	 * @param {String} book.image the book's image path
 	 * @param {Array<{price_mu: Number, ean: Number, type: String, condition: Number, qty: Number,
-	 *         weight_gm: Number}>} book.type an Object Array with the book's type details
+	 *				 weight_gm: Number}>} book.type an Object Array with the book's type details
 	 * @returns {Object} returns bookRecord object with change details if the new book has been added
 	 * @returns {Number} returns bookRecord.lastID if the new book has been added
 	 * @returns {Number} returns bookRecord.changes count if the new book has been added
@@ -131,8 +148,8 @@ class Books {
 		if(data.records === 0) throw new Error('bookType not found')
 
 		sql = `UPDATE bookType SET book_id = ${bookId}, price_mu = ${bookType.price_mu}, \
-    ean = "${bookType.ean}", type = "${bookType.type}", condition = "${bookType.condition}", \
-    qty = ${bookType.qty}, weight_gm = ${bookType.weight_gm} WHERE id = ${bookType.id};`
+		ean = "${bookType.ean}", type = "${bookType.type}", condition = "${bookType.condition}", \
+		qty = ${bookType.qty}, weight_gm = ${bookType.weight_gm} WHERE id = ${bookType.id};`
 		const bookTypeRecord = await this.db.run(sql)
 
 		return bookTypeRecord
@@ -158,7 +175,7 @@ class Books {
 		if(data.records === 0) throw new Error(`book with id "${book.id}" not found`)
 
 		sql = `UPDATE books SET name = "${book.name}", author = "${book.author}", \
-    description = "${book.description}", image = "${book.image}" WHERE id="${book.id}";`
+		description = "${book.description}", image = "${book.image}" WHERE id="${book.id}";`
 		const booksRecord = await this.db.run(sql)
 		return booksRecord
 	}

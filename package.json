@@ -19,6 +19,7 @@
 		"start": "node index.js",
 		"jsdoc": "node_modules/.bin/jsdoc -c jsdoc.conf",
 		"linter": "node_modules/.bin/eslint .",
+		"watch": "nodemon start",
 		"test": "ava"
 	},
 	"author": "",
@@ -33,6 +34,7 @@
 		"koa-session": "^6.0.0",
 		"koa-static": "^5.0.0",
 		"koa-views": "^6.3.0",
+		"nodemon": "^2.0.6",
 		"sqlite-async": "^1.1.0"
 	},
 	"devDependencies": {

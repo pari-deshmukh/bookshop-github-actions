@@ -49,6 +49,20 @@ publicRouter.get('/book/:book_type_id', async ctx => {
 	}
 })
 
+/**
+ * The secure orders cart page.
+ *
+ * @name Cart Page
+ * @route {GET} /
+ */
+publicRouter.get('/cart', async ctx => {
+	try {
+		await ctx.render('book', ctx.hbs)
+	} catch(err) {
+		await ctx.render('error', ctx.hbs)
+	}
+})
+
 
 /**
  * The user registration page.

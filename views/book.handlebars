@@ -20,6 +20,15 @@
 			{{/if}}
 		</header>
     <main>
+      
+    <script>
+      function addToCart(name, price) {
+        localStorage.order = {amount: 0, items: []}
+        localStorage.order.amount += parseFloat(price)
+        localStorage.order.items.push({name: name, qty: 1, price: parseFloat(price)})
+        alert('Book added to cart!!')
+      }
+    </script>
       {{#if book}}
         <section class="row">
           <aside class="column left">
@@ -32,7 +41,7 @@
             <h4><strong>EAN:</strong> {{book.ean}}</h4>
             <p>{{book.description}}</p>
             {{#if authorised}}
-              <a onclick="alert('Book added to cart!!')">Add to Cart</a>
+          <input type="button" value="Add to Cart" onclick="addToCart('{{book.name}}',{{book.price}})">
             {{/if}}
           </p>
         </section>

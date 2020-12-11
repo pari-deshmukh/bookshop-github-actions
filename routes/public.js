@@ -6,6 +6,7 @@ const publicRouter = new Router()
 publicRouter.use(bodyParser({multipart: true}))
 
 import { Accounts } from '../modules/accounts.js'
+import { Books } from '../modules/books.js'
 const dbName = 'website.db'
 
 /**
@@ -16,6 +17,13 @@ const dbName = 'website.db'
  */
 publicRouter.get('/', async ctx => {
 	try {
+		const priceFractionalValue = 100
+		const decimalPoints = 2
+		const books = await new Books(dbName)
+		ctx.hbs.books = await books.getAll()
+		await ctx.hbs.books.forEach(book => {
+			book.price = parseFloat(book.price_mu / priceFractionalValue).toFixed(decimalPoints)
+		})
 		await ctx.render('index', ctx.hbs)
 	} catch(err) {
 		await ctx.render('error', ctx.hbs)

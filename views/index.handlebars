@@ -11,21 +11,28 @@
 	</head>
 	<body>
 		<header>
-			<h1>Home</h1>
+			<h1>Book Store</h1>
 			{{#if authorised}}
 				<a href="/logout">Log out</a>
 			{{else}}
 				<a href="/login">Log in</a>
 			{{/if}}
 		</header>
-		{{#if msg}}
- 			<p class="msg">{{msg}}</p>
-		{{/if}}
-	<main>
-		<p>This is the home page. Users can see it without logging in.</p>
-		{{#if authorised}}
-			<p><a href="/secure">secure page</a></p>
-		{{/if}}
-	</main>
+    <main>
+      <section class="cards">
+        {{#if books}}
+        {{#each books}}
+          <a class="card" href="/book/{{id}}">
+            <img class="bookthumbs" src="images/{{image}}" alt="thumbnail of {{name}}" height="200px"/>
+            <p class="bookname">{{name}}</p>
+            <p class="author">by {{author}}</p>
+            {{#each types}}
+            <p class="price">£{{price}}</p>
+            {{/each}}
+          </a>
+        {{/each}}
+      {{/if}}
+      </section>
+    </main>
 	</body>
 </html>

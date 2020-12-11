@@ -12,17 +12,13 @@ class Books {
 			// we need this table to store the user accounts
 			let sql = 'CREATE TABLE IF NOT EXISTS books\
 				(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,\
-				author TEXT, description TEXT);'
+				author TEXT, description TEXT, image TEXT);'
 			await this.db.run(sql)
 			sql = 'CREATE TABLE IF NOT EXISTS bookType\
 				(id INTEGER PRIMARY KEY AUTOINCREMENT, book_id INTEGER NOT NULL,\
 				price_mu INTEGER, ean TEXT, type TEXT, condition TEXT,\
 				qty INTEGER, weight_gm INTEGER,\
 				FOREIGN KEY (book_id) REFERENCES books (id));'
-			await this.db.run(sql)
-			sql = 'CREATE TABLE IF NOT EXISTS bookImages\
-				(id INTEGER PRIMARY KEY AUTOINCREMENT, book_id INTEGER NOT NULL,\
-				thumbnail_name TEXT, fullsize_name TEXT);'
 			await this.db.run(sql)
 			return this
 		})()
@@ -33,17 +29,9 @@ class Books {
 	 * @returns {Array} returns array of book objects if books are present
 	 */
 	async getAll() {
-		let sql = 'SELECT * FROM books;'
-		const books = await this.db.all(sql)
-
-		for (const book of books) {
-			sql = `SELECT * FROM bookType WHERE book_id = ${book.id};`
-			book.types = await this.db.all(sql)
-			sql = `SELECT * FROM bookImages WHERE book_id = ${book.id};`
-			book.images = await this.db.all(sql)
-		}
-
-		return books
+		const sql = 'SELECT b.id, b.name, b.author, b.description, b.image, bt.id as book_type_id, bt.price_mu, \
+    bt.ean, bt.type, bt.condition, bt.qty, bt.weight_gm FROM books b, bookType bt WHERE bt.book_id=b.id;'
+		return await this.db.all(sql)
 	}
 
 	/**
@@ -56,15 +44,10 @@ class Books {
 		const records = await this.db.get(sql)
 		if(!records.count) throw new Error(`book id "${id}" not found`)
 
-		sql = `SELECT * FROM books WHERE id = ${id};`
-		const bookRecord = await this.db.get(sql)
-		sql = `SELECT * FROM bookType WHERE book_id = ${id};`
-		const bookTypes = await this.db.all(sql)
-		sql = `SELECT * FROM bookImages WHERE book_id = ${id};`
-		const bookImages = await this.db.all(sql)
-		bookRecord.types = await JSON.parse(JSON.stringify(bookTypes))
-		bookRecord.images = await JSON.parse(JSON.stringify(bookImages))
-		return bookRecord
+		sql = `SELECT b.id, b.name, b.author, b.description, b.image, bt.id as book_type_id, bt.price_mu,\
+    bt.ean, bt.type, bt.condition, bt.qty, bt.weight_gm FROM books b, bookType bt \
+    WHERE bt.book_id=b.id AND b.id = ${id};`
+		return await this.db.get(sql)
 	}
 
 	/**
@@ -94,41 +77,14 @@ class Books {
 	}
 
 	/**
-	 * adds a new set of book images
-	 * @param {Number} book_id the book's unique identifier
-	 * @param {Object} bookImages an Object with the filenames of the book's images
-	 * @param {String} bookImages.thumbnail_name filename of the book's thumbnail image
-	 * @param {String} bookImages.fullsize_name filename of the book's full size image
-	 * @returns {Object} returns book object with change details if the new book has been added
-	 * @returns {Number} returns book.lastID if the new book has been added
-	 * @returns {Number} returns book.changes count if the new book has been added
-	 */
-	async addBookImages(bookId, bookImages) {
-		if(!Object.keys(bookImages).length) throw new Error('bookImages object is empty')
-		if(!bookId) throw new Error('missing bookId')
-
-		let sql = `SELECT COUNT(id) as records FROM bookImages WHERE book_id=${bookId} AND \
-		thumbnail_name="${bookImages.thumbnail_name}" AND fullsize_name="${bookImages.fullsize_name}";`
-		const data = await this.db.get(sql)
-		if(data.records !== 0) throw new Error('this set of bookImages is already added')
-
-		sql = `INSERT INTO bookImages(book_id, thumbnail_name, fullsize_name)\
-		VALUES(${bookId}, "${bookImages.thumbnail_name}", "${bookImages.fullsize_name}");`
-		const bookImagesRecord= await this.db.run(sql)
-
-		return bookImagesRecord
-	}
-
-	/**
 	 * adds a new book
 	 * @param {Object} book an Object with the book details
 	 * @param {String} book.name the book's name
 	 * @param {String} book.author the book's author
 	 * @param {String} book.description the book's description
+	 * @param {String} book.image the book's image path
 	 * @param {Array<{price_mu: Number, ean: Number, type: String, condition: Number, qty: Number,
 	 *         weight_gm: Number}>} book.type an Object Array with the book's type details
-	 * @param {Array<{thumbnail_name: String, fullsize_name: String}>} book.images an
-	 *         Object Array with the filenames of the book's images
 	 * @returns {Object} returns bookRecord object with change details if the new book has been added
 	 * @returns {Number} returns bookRecord.lastID if the new book has been added
 	 * @returns {Number} returns bookRecord.changes count if the new book has been added
@@ -141,17 +97,14 @@ class Books {
 		const data = await this.db.get(sql)
 		if(data.records !== 0) throw new Error(`book "${book.name}" by author "${book.author}" is already added`)
 
-		sql = `INSERT INTO books(name, author, description) VALUES("${book.name}",\
-		"${book.author}", "${book.description}");`
+		sql = `INSERT INTO books(name, author, description, image) VALUES("${book.name}",\
+		"${book.author}", "${book.description}", "${book.image}");`
 		const booksRecord = await this.db.run(sql)
 
 		for (const bookType of book.types) {
 			await this.addBookType(booksRecord.lastID, bookType)
 		}
 
-		for (const bookImages of book.images) {
-			await this.addBookImages(booksRecord.lastID, bookImages)
-		}
 		return booksRecord
 	}
 
@@ -186,43 +139,15 @@ class Books {
 	}
 
 	/**
-	 * updates an existing set of book images
-	 * @param {Number} book_id the book's unique identifier
-	 * @param {Object} bookImages an Object with the filenames of the book's images
-	 * @param {Number} bookImages.id the bookImages unique identifier
-	 * @param {String} bookImages.thumbnail_name filename of the book's thumbnail image
-	 * @param {String} bookImages.fullsize_name filename of the book's full size image
-	 * @returns {Object} returns book object with change details if the book was updated
-	 * @returns {Number} returns book.lastID if the book was updated
-	 * @returns {Number} returns book.changes count if the book was updated
-	 */
-	async updateBookImages(bookId, bookImages) {
-		if(!Object.keys(bookImages).length) throw new Error('bookImages object is empty')
-		if(!bookImages.id) throw new Error('missing bookImages id')
-		if(!bookId) throw new Error('missing bookId')
-
-		let sql = `SELECT COUNT(id) as records FROM bookImages WHERE id=${bookImages.id};`
-		const data = await this.db.get(sql)
-		if(data.records === 0) throw new Error('bookImages set not found')
-
-		sql = `UPDATE bookImages SET book_id = ${bookId}, thumbnail_name = "${bookImages.thumbnail_name}", \
-    fullsize_name = "${bookImages.fullsize_name}" WHERE id = ${bookImages.id};;`
-		const bookImagesRecord= await this.db.run(sql)
-
-		return bookImagesRecord
-	}
-
-	/**
 	 * updates an existing book
 	 * @param {Object} book an Object with the book details
 	 * @param {Number} book.id the book's unique identifier
 	 * @param {String} book.name the book's name
 	 * @param {String} book.author the book's author
 	 * @param {String} book.description the book's description
+	 * @param {String} book.image the book's image path
 	 * @param {Array<{id: Number, price_mu: Number, ean: Number, type: String, condition: Number,
 	 *         qty: Number, weight_gm: Number}>} book.type an Object Array with the book's type details
-	 * @param {Array<{id: Number, thumbnail_name: String, fullsize_name: String}>} book.images an
-	 *         Object Array with the filenames of the book's images
 	 * @returns {Object} returns bookRecord object with change details if the book was updated
 	 * @returns {Number} returns bookRecord.lastID if the book was updated
 	 * @returns {Number} returns bookRecord.changes count if the book was updated
@@ -235,15 +160,11 @@ class Books {
 		if(data.records === 0) throw new Error(`book with id "${book.id}" not found`)
 
 		sql = `UPDATE books SET name = "${book.name}", author = "${book.author}", \
-    description = "${book.description}" WHERE id="${book.id}";`
+    description = "${book.description}", image = "${book.image}" WHERE id="${book.id}";`
 		const booksRecord = await this.db.run(sql)
 
 		for (const bookType of book.types) {
 			await this.updateBookType(book.id, bookType)
-		}
-
-		for (const bookImages of book.images) {
-			await this.updateBookImages(book.id, bookImages)
 		}
 		return booksRecord
 	}
@@ -258,8 +179,6 @@ class Books {
 		const data = await this.db.get(sql)
 		if(data.records === 0) throw new Error(`book with id "${id}" not found`)
 
-		sql = `DELETE FROM bookImages WHERE book_id="${id}";`
-		await this.db.run(sql)
 		sql = `DELETE FROM bookType WHERE book_id="${id}";`
 		await this.db.run(sql)
 		sql = `DELETE FROM books WHERE id="${id}";`

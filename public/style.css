@@ -1,8 +1,6 @@
-
 body {
 		font-family: Arial, Helvetica, sans-serif;
-		margin: 0;
-	}
+}
 
 /* formats the red message boxes */
 .msg {
@@ -59,13 +57,13 @@ header > img {
 	top: 0.5vw;
 }
 
-p, legend {
+/* p, legend {
 	font-size: 1.5vw;
-}
+} */
 
 main {
 	width: 100%;
-	margin-left: 3vw;
+/* 	margin-left: 3vw; */
 	/* background-color: pink; */
 }
 
@@ -91,7 +89,7 @@ main a:hover {
 	text-decoration: none;
 }
 
-section {
+/* section {
 	background-color: #DDD;
 	width: 24vw;
 	margin-top: 1vw;
@@ -109,7 +107,7 @@ section > h3 {
 	margin: 0;
 	padding: 0;
 	font-size: 1.8vw;
-}
+} */
 
 small {
 	display: block;
@@ -226,4 +224,42 @@ td {
 td:last-child {
 	width: 10vw;
 	text-align: right;
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 1vw;
+}
+
+.cards a {
+  text-decoration: none;
+}
+ 
+.card {
+  flex: 1 0 270px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  margin: 0 .25em;
+  text-align: center;
+  transition: 0.3s;
+  padding: 1rem 1rem;
+
+}
+
+/* On mouse-over, add a deeper shadow */
+.card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
+
+.bookthumbs {
+  margin-top: 1rem;
+}
+
+.author {
+  font-size: .85em;
+}
+
+.price {
+  color: #ff7700;
 }

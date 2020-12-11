@@ -13,6 +13,7 @@ const defaultPort = 8080
 const port = process.env.PORT || defaultPort
 
 app.use(serve('public'))
+app.use(serve('images'))
 app.use(session(app))
 app.use(views('views', { extension: 'handlebars' }, {map: { handlebars: 'handlebars' }}))
 

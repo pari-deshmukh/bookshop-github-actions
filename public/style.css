@@ -263,3 +263,27 @@ td:last-child {
 .price {
   color: #ff7700;
 }
+
+.column {
+  padding: 0 2em;
+  float: left;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.left {
+  float: left;
+  width: 40%;
+  text-align: right;
+}
+.right {
+  float: right;
+  width: 60%;
+  padding: 1em;
+ 
+}

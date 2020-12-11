@@ -1,0 +1,42 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>{{name}}</title>
+		<meta name="description" content="form to add new books">
+		<meta name="author" content="Mark Tyers">
+		<link href="{{host}}/style.css" type="text/css" rel="stylesheet" />
+	</head>
+	<body>
+		<header>
+			<h1><a href="/">Book Store</a></h1>
+			{{#if authorised}}
+				<a href="/logout">Log out</a>
+				<a href="/cart">Cart</a>
+			{{else}}
+				<a href="/login">Log in</a>
+			{{/if}}
+		</header>
+    <main>
+      {{#if book}}
+        <section class="row">
+          <aside class="column left">
+            <img src="{{host}}/images/{{book.image}}" alt="book cover of {{book.name}}" height="700px"/> 
+          </aside>
+          <p class="column right">
+            <h2>{{book.name}}</h2>
+            <h3><strong>Author:</strong> {{book.author}}</h3>
+            <h3><strong>Price:</strong> £{{book.price}}</h3>
+            <h4><strong>EAN:</strong> {{book.ean}}</h4>
+            <p>{{book.description}}</p>
+            {{#if authorised}}
+              <a onclick="alert('Book added to cart!!')">Add to Cart</a>
+            {{/if}}
+          </p>
+        </section>
+      {{/if}}
+    </main>
+	</body>
+</html>

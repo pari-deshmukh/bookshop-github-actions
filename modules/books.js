@@ -146,8 +146,6 @@ class Books {
 	 * @param {String} book.author the book's author
 	 * @param {String} book.description the book's description
 	 * @param {String} book.image the book's image path
-	 * @param {Array<{id: Number, price_mu: Number, ean: Number, type: String, condition: Number,
-	 *         qty: Number, weight_gm: Number}>} book.type an Object Array with the book's type details
 	 * @returns {Object} returns bookRecord object with change details if the book was updated
 	 * @returns {Number} returns bookRecord.lastID if the book was updated
 	 * @returns {Number} returns bookRecord.changes count if the book was updated
@@ -162,10 +160,6 @@ class Books {
 		sql = `UPDATE books SET name = "${book.name}", author = "${book.author}", \
     description = "${book.description}", image = "${book.image}" WHERE id="${book.id}";`
 		const booksRecord = await this.db.run(sql)
-
-		for (const bookType of book.types) {
-			await this.updateBookType(book.id, bookType)
-		}
 		return booksRecord
 	}
 

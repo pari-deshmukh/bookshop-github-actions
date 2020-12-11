@@ -121,7 +121,7 @@ test('GET : get all books', async test => {
 	books.close()
 })
 
-test.only('GET : add book and retrieve by id', async test => {
+test('GET : add book and retrieve by id', async test => {
 	test.plan(1)
 	const books = await new Books()
 	await books.add(merchantOfVenice)
@@ -151,7 +151,7 @@ test('UPDATE: update book by id', async test => {
 	record.description = 'An early work of William Shakespeare.'
 	await books.update(record)
 	const updatedRecord = await books.get(1)
-	test.deepEqual(updatedRecord, record, 'book not updated as expected')
+	test.is(updatedRecord.description, 'An early work of William Shakespeare.', 'book not updated as expected')
 	books.close()
 })
 

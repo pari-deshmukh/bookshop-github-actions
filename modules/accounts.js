@@ -5,7 +5,10 @@ import sqlite from 'sqlite-async'
 const saltRounds = 10
 
 class Accounts {
-
+	/**
+	 * create an account object
+	 * @params {String} [dbName=":memory:"] name of the database file to use
+	 */
 	constructor(dbName = ':memory:') {
 		return (async() => {
 			this.db = await sqlite.open(dbName)

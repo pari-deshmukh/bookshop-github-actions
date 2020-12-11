@@ -30,6 +30,25 @@ publicRouter.get('/', async ctx => {
 	}
 })
 
+/**
+ * The secure book details page.
+ *
+ * @name Book Page
+ * @route {GET} /
+ */
+publicRouter.get('/book/:book_type_id', async ctx => {
+	try {
+		const priceFractionalValue = 100
+		const decimalPoints = 2
+		const books = await new Books(dbName)
+		ctx.hbs.book = await books.getByType(ctx.params.book_type_id)
+		ctx.hbs.book.price = parseFloat(ctx.hbs.book.price_mu / priceFractionalValue).toFixed(decimalPoints)
+		await ctx.render('book', ctx.hbs)
+	} catch(err) {
+		await ctx.render('error', ctx.hbs)
+	}
+})
+
 
 /**
  * The user registration page.

@@ -130,6 +130,15 @@ test('GET : add book and retrieve by id', async test => {
 	books.close()
 })
 
+test('GET : add book and retrieve by type id', async test => {
+	test.plan(1)
+	const books = await new Books()
+	await books.add(merchantOfVenice)
+	const record = await books.getByType(1)
+	test.is(record.ean, merchantOfVenice.types[0].ean, 'book type entry mismatch')
+	books.close()
+})
+
 test('GET : invalid book id', async test => {
 	test.plan(1)
 	const books = await new Books()
